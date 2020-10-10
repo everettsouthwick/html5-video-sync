@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="Synchronize playback of HTML5 video with your friends." name="description">
+    <meta content="sync,synchronize,playback,html5,video,html5 video,watch,together,watch together" name="keywords">
+    <meta content="noodp" name="robots">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
+    <meta hreflang="en-us" rel="alternate">
+    <meta content="~/img/branding/favicon.png" itemprop="image">
+    <link href="~/img/branding/favicon.ico" rel="shortcut icon">
+    <link href="~/img/branding/apple-touch-icon.png" rel="apple-touch-icon">
+    <title>sync.</title>
+    <!-- Fonts -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,900;1,300;1,400;1,900&display=swap');
+    </style>
+    <!-- Materialize -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/mobile-style.css" rel="stylesheet">
+    <link href="css/html5player.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navigation Header -->
+
+    <main>
+        <section id="home">
+
+            <div id="userFormArea">
+                <div class="hero-header header-desktop nav-wrapper">
+                    <nav>
+                        <div class="hero-header brand-logo">
+                            <a href="/" class="brand-logo">Sync.</a>
+                        </div>
+                    </nav>
+                </div>
+                <div id="master-banner" class="row">
+                    <div id="banner">
+                        <div class="valign-wrapper">
+                            <div class="container">
+                                <div id="tagline">
+                                    <div id="heading">
+                                        <h1 class="valign">Videos, in sync</h1>
+                                    </div>
+                                    <div id="sub-heading">
+                                        <h2 class="valign">Watch any HTML5 compatiable video with your friends in
+                                            sync.</h2>
+                                    </div>
+                                    <form id="userForm" class="col s12 card">
+                                        <div class="row card-content">
+                                            <div class="input-field col s12">
+                                                <input placeholder="John" id="username" type="text">
+                                                <label for="username">Username</label>
+                                            </div>
+                                        </div>
+                                        <div id="roomid" class="row card-content">
+                                            <div class="input-field col s12">
+                                                <input placeholder="1" id="roomnum" type="text">
+                                                <label for="roomnum">Room ID</label>
+                                                <button type="button" onClick="randomroom()"
+                                                    class="waves-effect waves-light btn">Random</button>
+                                            </div>
+                                        </div>
+                                        <div class="row card-content">
+                                            <div class="input-field col s12">
+                                                <input type="submit" class="waves-effect waves-light btn"
+                                                    value="Join Room">
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </section>
+        <section id="playback">
+            <div id="roomArea">
+                <div class="row">
+                    <div class="video-container">
+                        <div id='HTML5Area'>
+                            <div class="html5player">
+                                <video
+                                    src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                                    id="html5src" controls>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-container">
+                        <div id="messageArea">
+                            <ul class="chat collection" id="chat"></ul>
+                            <form id="messageForm">
+                                <div>
+                                    <input id="message" type="text" placeholder="Message">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col s12 m2">
+                        <span class="message-header">Connected Users</span>
+                        <ul class="collection" id="users"></ul>
+                    </div>
+                    <div class="col s11 m4">
+                        <button id="playButton" onclick="playVideo(roomnum)" class="waves-effect waves-light btn"><i
+                                class="fa fa-play"></i> Play / <i class="fa fa-pause"></i> Pause</button>
+                        <button id="syncbutton" onclick="syncVideo(roomnum);syncAlert()"
+                            class="waves-effect waves-light btn"><i class="fa fa-sync"></i> Sync</button>
+                        <div class="change-video">
+                                <div class="change-video-input input-field">
+                                    <input type="text" id="inputVideoId" placeholder="example.com/video.mp4">
+                                    <label for="inputVideoId">Video URL</label>
+                                </div>
+                                <div class="change-video-button">
+
+
+                                    <button id="changeButton" onclick="changeVideoParse(roomnum)"
+                                        class="btn btn-primary"><i class="fas fa-exchange-alt"></i> Change
+                                        Video</button>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+    </main>
+    <!-- JQuery -->
+    <script src="https://code.jquery.com/jquery-latest.min.js"></script>
+    <!-- Socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io.connect();
+        var roomnum = 1
+        var id = "M7lc1UVf-VE"
+        var username = ""
+        // Don't allow trailing or leading whitespace!
+        var nosymbols = new RegExp("^(([a-zA-Z0-9_-][a-zA-Z0-9 _-]*[a-zA-Z0-9_-])|([a-zA-Z0-9_-]*))$");
+
+        // Chat stuff
+        $(function () {
+            var $messageForm = $('#messageForm');
+            var $message = $('#message');
+            var $chat = $('#chat');
+            var $roomArea = $('#roomArea');
+            var $userFormArea = $('#userFormArea');
+            var $userForm = $('#userForm');
+            var $users = $('#users');
+            var $username = $('#username');
+            var $roomnum = $('#roomnum');
+
+            var $vidlist = $('#vidlist');
+
+            //   function send_message() {
+            //       socket.emit('send message', $message.val());
+            //       $message.val('');
+            //   }
+            //
+            //   $(document).keyup(send_message());
+            //   $("input").keypress(function(event) {
+            //     if (event.which == 13) {
+            //         event.preventDefault();
+            //         send_message();
+            //     }
+            // });
+
+
+            $messageForm.submit(function (e) {
+                e.preventDefault();
+                // console.log("Submitted");
+                socket.emit('send message', $message.val());
+                $message.val('');
+            });
+
+            socket.on('new message', function (data) {
+                var last_div = $('#chat > li:last')[0]
+
+                // This checks for the last user
+                // If you are the last user, attach the message instead of creating a new div
+                if (last_div !== undefined) {
+                    var last_user = $(last_div).data("username");
+                }
+                if (data.user != last_user) {
+                    $chat.append('<li class="collection-item" data-username="' + data.user +
+                        '"><span class="message-username">' + data
+                        .user + '</span><span class="message-date">' + data.time +
+                        '</span><span class="message-content">' + data.msg + '</span></div>');
+                    // $vidlist.append('<div class="vid-item"><div class="thumb"><img src="http://img.youtube.com/vi/eg6kNoJmzkY/0.jpg"></div><div class="desc">Jessica Hernandez & the Deltas - Dead Brains</div></div>');
+                }
+                // If you sent the last message, append to previous
+                else {
+                    last_div.innerHTML = last_div.innerHTML + '<span class="message-content">' + data
+                        .msg + '</span>'
+                    // $vidlist.append('<div class="vid-item"><div class="thumb"><img src="http://img.youtube.com/vi/eg6kNoJmzkY/0.jpg"></div><div class="desc">Jessica Hernandez & the Deltas - Dead Brains</div></div>');
+                }
+                // $chat.scrollTop = $chat.scrollHeight;
+                // Auto scroll on each message send!
+                $('ul#chat').scrollTop($('ul#chat')[0].scrollHeight)
+            });
+
+            // Submit user form
+            $userForm.submit(function (e) {
+                e.preventDefault();
+                // console.log("Submitted");
+                // New User
+
+                // Get rid of trailing/leading whitespace
+                // var roomnum_val = $roomnum.val().trim();
+
+                // If name not entered
+                if ($username.val() == "") {
+                    console.log("ENTER A NAME")
+                    var noname = document.getElementById('missinginfo')
+                    noname.innerHTML = "Surely you have a name right? Enter it below!"
+                }
+                // If name is too long
+                else if ($username.val().length > 30) {
+                    console.log("NAME IS TOO LONG")
+                    var noname = document.getElementById('missinginfo')
+                    noname.innerHTML = "Your name can't possibly be over 30 characters!"
+                }
+                // If roomnate
+                else if ($roomnum.val().length > 50) {
+                    console.log("ROOM NAME IS TOO LONG")
+                    var noname = document.getElementById('missinginfo')
+                    noname.innerHTML =
+                        "How are you going to remember a room code that has more than 50 characters?"
+                }
+                // If Room contains symbols
+                // Can only be reached if the user decided to be sneaky and paste them!
+                else if (!nosymbols.test($roomnum.val())) {
+                    console.log("ENTER A PROPER ROOMNUMBER")
+                    var noname = document.getElementById('missinginfo')
+                    noname.innerHTML = ""
+                    var noname2 = document.getElementById('missinginfo2')
+                    noname2.innerHTML =
+                        "Please enter a room ID without symbols or leading/trailing whitespace!"
+                } else {
+                    username = $username.val()
+                    socket.emit('new user', $username.val(), function (data) {
+                        if (data) {
+                            $userFormArea.hide();
+                            $roomArea.show();
+
+                            // Move footer to correct position
+                            document.getElementById('footer').style.position = 'relative';
+
+                            // Show header buttons!
+                            document.getElementById('chat-nav').style.display = 'block';
+                            document.getElementById('about-nav').style.display = 'block';
+                            document.getElementById('contact-nav').style.display = 'block';
+
+                            // No longer using initarea
+                            // var initStuff = document.getElementById("initArea")
+                            // initStuff.innerHTML = ""
+
+                            // This sets the room number on the client
+                            if ($roomnum.val() != "") {
+                                roomnum = $roomnum.val()
+                            }
+
+                            // Sets the invite link (roomnum)
+                            // document.getElementById('invite').innerHTML = "vynchronize.herokuapp.com/" + roomnum
+                            document.getElementById("inv_input").value = "sync.plexapp.dev/" +
+                                roomnum
+                            history.pushState('', 'Vynchronize', roomnum);
+
+                        }
+                    });
+                    // Join room
+                    socket.emit('new room', $roomnum.val(), function (data) {
+                        // This should only call back if the client is the host
+                        if (data) {
+                            console.log("Host is syncing the new socket!")
+                            syncVideo(roomnum)
+                        }
+                    });
+
+                    $username.val('');
+                }
+            });
+
+            socket.on('get users', function (data) {
+                var html = '';
+                for (i = 0; i < data.length; i++) {
+                    if (i === 0) {
+                        html += '<li class="collection-item">' + data[i] +
+                            ' <i class="fa fa-star" aria-hidden="true"></i></li>'
+                    } else {
+                        html += '<li class="collection-item">' + data[i] + '</li>';
+                    }
+                }
+
+                $users.html(html)
+            });
+
+            // Updates the queue
+            // Parameters - vidlist, currPlayer, videoId
+            socket.on('get vidlist', function (data) {
+                console.log("i am updating the queue")
+                var yt = data.vidlist.yt
+                var html = ''
+                if (yt.length > 0) {
+                    for (i = 0; i < yt.length; i++) {
+                        html +=
+                            '<li class="vid-item"><div class="thumb"><a href="javascript: removeAt(' +
+                            i +
+                            ')" class="ghost-button-full-color"><i class="far fa-times-circle"></i></a><a href="javascript: playAt(' +
+                            i +
+                            ')"><img src="http://img.youtube.com/vi/' + yt[i].videoId +
+                            '/0.jpg"></a></div><a href="javascript: playAt(' + i + ')" class="desc">' +
+                            yt[i].title + '</a></li>'
+                    }
+                } else {
+                    html += '<li class="vid-item"></li>'
+                }
+
+                $vidlist.html(html)
+            });
+
+
+            // Prevent special characters from being typed
+            $('#roomnum').on('keypress', function (event) {
+                var nosymbols = new RegExp("^[a-zA-Z0-9\s]+$");
+                var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+                console.log(key)
+                console.log(event.keyCode)
+                // Allow enters and spaces to be used still
+                if ($roomnum.val().length > 50 || !nosymbols.test(key) && event.keyCode != 13 && event
+                    .keyCode != 32 && event.keyCode != 45 && event.keyCode != 95) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+
+            // Prevent special characters from being typed
+            $('#username').on('keypress', function (event) {
+                var nosymbols = new RegExp("^[a-zA-Z0-9\s]+$");
+                var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+                // Allow enters and spaces to be used still
+                if ($username.val().length > 30 || !nosymbols.test(key) && event.keyCode != 13 && event
+                    .keyCode != 32 && event.keyCode != 45 && event.keyCode != 95) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+
+        });
+
+        // Remove the video from the queue at idx
+        function removeAt(idx) {
+            socket.emit('remove at', {
+                idx: idx
+            })
+        }
+
+        function playAt(idx) {
+            socket.emit('play at', {
+                idx: idx
+            }, function (data) {
+                var videoId = data.videoId
+
+                // Change the video
+                socket.emit('change video', {
+                    room: roomnum,
+                    videoId: videoId,
+                    time: 0
+                })
+            })
+        }
+
+
+        // Turn off the lights!
+        var per = 0;
+        $(document).ready(function () {
+            $("#persoff").css("height", $(document).height()).hide();
+            $(document).click(function (e) {
+                if (!$(e.target).hasClass('switch') && per == 1) {
+                    $("#persoff").toggle();
+                    per = 0;
+                }
+            });
+            $(".switch").click(function () {
+                $("#persoff").toggle();
+                per += 1;
+                if (per == 2) {
+                    per = 0;
+                }
+            });
+        });
+
+        // playlist
+        $(document).ready(function () {
+            $(".arrow-right").bind("click", function (event) {
+                event.preventDefault();
+                $(".vid-list-container").stop().animate({
+                    scrollLeft: "+=336"
+                }, 750);
+            });
+            $(".arrow-left").bind("click", function (event) {
+                event.preventDefault();
+                $(".vid-list-container").stop().animate({
+                    scrollLeft: "-=336"
+                }, 750);
+            });
+        });
+
+        // set id
+        socket.on('set id', function (data) {
+            // Ensure no valid id too
+            if (data.id != "" && nosymbols.test(data.id)) {
+                document.getElementById('roomnum').value = data.id
+                // Probably should not force it to be readonly
+                // document.getElementById('roomnum').readOnly = true
+                console.log("You are joining room: " + data.id)
+            }
+            // Reset url for next person
+            // Workaround
+            socket.emit('reset url')
+        });
+
+        function copyInvite() {
+            /* Get the text field */
+            var copyText = document.getElementById("inv_input");
+            console.log(copyText)
+            /* Select the text field */
+            copyText.select();
+            /* Copy the text inside the text field */
+            document.execCommand("Copy");
+            /* Alert the copied text */
+            // alert("Copied the text: " + copyText.value);
+            var tooltip = document.getElementById("myTooltip");
+            tooltip.innerHTML = "Copied!";
+        }
+
+        function outFunc() {
+            var tooltip = document.getElementById("myTooltip");
+            tooltip.innerHTML = "Copy to clipboard";
+        }
+
+        // Generate a random alphanumeric room id
+        function randomroom() {
+            document.getElementById('roomnum').value = Math.random().toString(36).substr(2, 12)
+        }
+    </script>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="js/dependencies/jquery.min.js"></script>
+    <script src="js/dependencies/bootstrap.bundle.min.js"></script>
+    <script src="js/dependencies/scrolling-nav.js"></script>
+    <script src="js/dependencies/bootstrap-notify.min.js"></script>
+    <!-- Plugin JavaScript -->
+    <script src="js/dependencies/jquery.easing.min.js"></script>
+    <!-- My JS files -->
+    <script src="js/sync.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/host.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/notify.js"></script>
+    <!-- HTML5 Player -->
+    <script src="js/html5.js"></script>
+    <!-- Materialize -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <!-- Font awesome -->
+    <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
+</body>
+
+</html>
