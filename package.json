@@ -1,29 +1,29 @@
 {
-  "name": "vynchronize",
+  "name": "html5-video-sync",
   "version": "1.0.0",
-  "description": "Video synchronization app",
+  "description": "Sync HTML5 playback.",
   "main": "server.js",
   "scripts": {
     "test": "jshint test.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kyle8998/Vynchronize.git"
+    "url": "https://github.com/everettsouthwick/html5-video-sync"
   },
-  "author": "Kyle Lim",
-  "license": "ISC",
+  "author": "Everett Southwick",
+  "license": "MIT",
   "dependencies": {
     "dotenv": "8.1.0",
     "express": "*",
-    "lodash": "^4.17.13",
+    "lodash": "^4.17.20",
     "socket.io": "*",
     "ws": ">=3.3.1"
   },
   "bugs": {
-    "url": "https://github.com/kyle8998/Vynchronize/issues"
+    "url": "https://github.com/everettsouthwick/html5-video-sync/issues"
   },
-  "homepage": "https://github.com/kyle8998/Vynchronize#readme",
+  "homepage": "https://github.com/everettsouthwick/html5-video-sync#readme",
   "devDependencies": {
-    "jshint": "^2.9.5"
+    "jshint": "^2.12.0"
   }
 }
