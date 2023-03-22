@@ -24,6 +24,6 @@
   },
   "homepage": "https://github.com/everettsouthwick/html5-video-sync#readme",
   "devDependencies": {
-    "jshint": "^2.12.0"
+    "jshint": "^2.13.6"
   }
 }
