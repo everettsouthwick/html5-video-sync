@@ -13,7 +13,7 @@
   "author": "Everett Southwick",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "8.6.0",
+    "dotenv": "16.3.1",
     "express": "*",
     "lodash": "^4.17.21",
     "socket.io": "*",
